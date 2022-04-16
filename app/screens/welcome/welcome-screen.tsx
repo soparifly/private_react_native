@@ -1,5 +1,5 @@
 import React, { FC } from "react"
-import { View, ViewStyle, TextStyle, ImageStyle, SafeAreaView } from "react-native"
+import { View, ViewStyle, TextStyle, SafeAreaView } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
 import { observer } from "mobx-react-lite"
 import {
@@ -8,12 +8,13 @@ import {
   Screen,
   Text,
   GradientBackground,
-  AutoImage as Image,
 } from "../../components"
 import { color, spacing, typography } from "../../theme"
 import { NavigatorParamList } from "../../navigators"
 
-const bowserLogo = require("./bowser.png")
+import ImagePicker from 'react-native-image-picker'
+import { PERMISSIONS, request, check, RESULTS } from 'react-native-permissions'
+
 
 const FULL: ViewStyle = { flex: 1 }
 const CONTAINER: ViewStyle = {
@@ -41,33 +42,7 @@ const HEADER_TITLE: TextStyle = {
 const TITLE_WRAPPER: TextStyle = {
   ...TEXT,
   textAlign: "center",
-}
-const TITLE: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 28,
-  lineHeight: 38,
-  textAlign: "center",
-}
-const ALMOST: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 26,
-  fontStyle: "italic",
-}
-const BOWSER: ImageStyle = {
-  alignSelf: "center",
-  marginVertical: spacing[5],
-  maxWidth: "100%",
-  width: 343,
-  height: 230,
-}
-const CONTENT: TextStyle = {
-  ...TEXT,
-  color: "#BAB6C8",
-  fontSize: 15,
-  lineHeight: 22,
-  marginBottom: spacing[5],
+  padding: 10
 }
 const CONTINUE: ViewStyle = {
   paddingVertical: spacing[4],
@@ -86,9 +61,58 @@ const FOOTER_CONTENT: ViewStyle = {
   paddingHorizontal: spacing[4],
 }
 
+const includeExtra = true;
+
 export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> = observer(
   ({ navigation }) => {
-    const nextScreen = () => navigation.navigate("demo")
+
+
+    const [response, setResponse] = React.useState(null);
+
+    const 카메라실행 = React.useCallback((type, options) => {
+      if (type === 'capture') {
+        ImagePicker.launchCamera(options, setResponse);
+      } else {
+        ImagePicker.launchImageLibrary(options, setResponse);
+      }
+
+    }, [])
+
+    /**
+     * check 방식은 특정 권한상태확인후 리턴
+     * request 는 메시지를 띄움
+     * 
+     */
+    const requestPermisstion = () => {
+      request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE).then(response => {
+        console.log(response);
+
+      })
+    }
+
+    const checkPermission = () => {
+      check(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE).then(result => {
+        switch (result) {
+          case RESULTS.UNAVAILABLE:
+            // 이 기능을 사용할 수 없습니다(이 장치에서 / 이 컨텍스트에서)
+            break;
+          case RESULTS.DENIED:
+            // 권한이 요청되지 않았습니다/거부되었지만 요청 가능합니다
+            break;
+          case RESULTS.GRANTED:
+            // 권한이 부여됨
+            break;
+          case RESULTS.LIMITED:
+            // 권한이 부여되지만 제한이 있습니다.
+            break;
+          case RESULTS.BLOCKED:
+          // 권한이 거부되었으며 더 이상 요청할 수 없습니다.
+        }
+
+      })
+
+    }
+
 
     return (
       <View testID="WelcomeScreen" style={FULL}>
@@ -96,19 +120,13 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
         <Screen style={CONTAINER} preset="scroll" backgroundColor={color.transparent}>
           <Header headerTx="welcomeScreen.poweredBy" style={HEADER} titleStyle={HEADER_TITLE} />
           <Text style={TITLE_WRAPPER}>
-            <Text style={TITLE} text="Your new app, " />
-            <Text style={ALMOST} text="almost" />
-            <Text style={TITLE} text="!" />
+            접근 권한 승인
           </Text>
-          <Text style={TITLE} preset="header" tx="welcomeScreen.readyForLaunch" />
-          <Image source={bowserLogo} style={BOWSER} />
-          <Text style={CONTENT}>
-            This probably isn't what your app is going to look like. Unless your designer handed you
-            this screen and, in that case, congrats! You're ready to ship.
+          <Text style={TITLE_WRAPPER}>
+            해당 서비스 이용을 위한 접근 권한을 허용합니다.
           </Text>
-          <Text style={CONTENT}>
-            For everyone else, this is where you'll see a live preview of your fully functioning app
-            using Ignite.
+          <Text style={TITLE_WRAPPER}>
+            카메라 접근 권한을 허용합니다
           </Text>
         </Screen>
         <SafeAreaView style={FOOTER}>
@@ -118,11 +136,11 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
               style={CONTINUE}
               textStyle={CONTINUE_TEXT}
               tx="welcomeScreen.continue"
-              onPress={nextScreen}
+              onPress={() => requestPermisstion()}
             />
           </View>
         </SafeAreaView>
-      </View>
+      </View >
     )
   },
 )
