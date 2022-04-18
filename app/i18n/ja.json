@@ -3,5 +3,9 @@
     "ok": "OK 🇯🇵",
     "cancel": "Cancel 🇯🇵",
     "back": "Back 🇯🇵"
+  },
+  "type": {
+    "capture": "capture",
+    "library": "library"
   }
 }
